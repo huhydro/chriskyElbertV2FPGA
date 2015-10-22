@@ -21,7 +21,6 @@
 module new_counter(
 input rst_n,
 input inc,
-input dec,
 output [9:0]counter
     );
 

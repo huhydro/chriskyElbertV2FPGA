@@ -28,8 +28,6 @@ module dht11_driver(
 	 output reg [3:0]status
     );
 	 
-	 //reg[7:0] output_temp;
-    //reg[7:0] output_humidity;
 	 
 	 integer clock_count;
 	 integer data_count;
@@ -43,10 +41,7 @@ module dht11_driver(
 	 assign data_in = dht11_dat;
 	 
 	 reg[3:0] state;
-	 
-	 //assign output_temp_wire = output_temp;
-	 //assign output_humidity_wire = output_humidity;
-	 
+	 	 
 	 always@(posedge clk1mhz, negedge rst_n)
 	 begin
 		if (~rst_n)
@@ -57,10 +52,15 @@ module dht11_driver(
 			output_temp <= 8'b0;
 			output_humidity <=8'b0;
 			global_count<=0;
+			clock_count <=0;
+			data_count<=0;
+
 		end
 		else
 		begin
 			status<=state;
+			clock_count<=clock_count+1;
+			
 			case( state)
 			4'b0:
 			begin
@@ -75,13 +75,15 @@ module dht11_driver(
 			4'b1:
 			begin
 				if(start_signal==1'b1)
+				begin
 					state<=4'd2;
+					clock_count<=0;
+				end
 			end
 			4'd2:
 			begin
 				direction<=1'd0;
 				data_out<=1'd0;
-				clock_count<=clock_count+1;
 				if(clock_count==30000)
 				begin
 					state <=4'd3;
@@ -91,13 +93,11 @@ module dht11_driver(
 			4'd3:
 			begin
 				data_out<=1'd1;
-				clock_count<=clock_count+1;
 				if (clock_count == 20)
 				begin
 					direction<=1'b1;
 					data_out<=1'bz;
 					state <=4'd4;
-					clock_count<=0;
 				end
 			end
 			4'd4:
@@ -117,7 +117,6 @@ module dht11_driver(
 			end
 			4'd7:
 			begin
-				clock_count<=clock_count+1;
 				if(data_in == 1'b1)
 					begin
 						state<=4'd8;
@@ -127,7 +126,6 @@ module dht11_driver(
 			4'd8:
 			begin
 				global_count<=global_count+1;
-				clock_count<=clock_count+1;
 				output_temp[0]<=data[23];
 				output_temp[1]<=data[22];
 				output_temp[2]<=data[21];

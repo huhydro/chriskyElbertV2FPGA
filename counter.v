@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: 
+// Engineer: Chrisky HU
 // 
 // Create Date:    20:50:04 10/01/2015 
 // Design Name: 
@@ -21,13 +21,11 @@
 module counter(
 	input reset_n,
    input inc,
-   input dec,
-	input clk,
+   input clk,
    output [3:0] counter
     );
 	 
 	 reg inc_n;
-	 reg dec_n;
 	 reg [3:0] counter_out;
 	 
 	 assign counter = counter_out;

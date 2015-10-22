@@ -5,7 +5,7 @@
 // 
 // Create Date:    21:35:40 10/01/2015 
 // Design Name: 
-// Module Name:    counter_fpga 
+// Module Name:    ElbertV2_FPGA_Board 
 // Project Name: 
 // Target Devices: 
 // Tool versions: 
@@ -18,7 +18,7 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module counter_fpga(
+module ElbertV2_FPGA_Board(
 	input[5:0] BTN,
 	input clk,
 	output[7:0] LED,
@@ -184,8 +184,8 @@ module counter_fpga(
 	debounce debounce_start(clk_div_1kHZ,btn2_n,btn2_n_debounced);
 	debounce debounce_rst(clk_div_1kHZ,rst_n,rst_debounced);
 
-	new_counter theNewCounter(rst_n,inc_n_debounced,dec_debounced,counter_4bit_out);
-	new_counter the10bitCounter(rst_n,clk_div_1Hz,dummy,counter_10bit_out);
+	new_counter theNewCounter(rst_n,inc_n_debounced,counter_4bit_out);
+	new_counter the10bitCounter(rst_n,clk_div_1Hz,counter_10bit_out);
 	
 	mySevenSegment sevenSegementDec(clk,rst_debounced,LCD_1,LCD_2,LCD_3,SevenSegment[7:1],SevenSegment_Enable);
 	BINARY_TO_BCD   theBinary2BCD(counter_10bit_out, HUNDREDS,TENS,ONES);
