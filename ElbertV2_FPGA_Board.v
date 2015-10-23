@@ -37,6 +37,7 @@ module ElbertV2_FPGA_Board(
 
 	wire inc_n_debounced;
 	wire btn2_n_debounced;
+	wire btn6_debounced;
 	wire select_onehot;
 	wire rst_debounced;
 	wire clk_div_1Hz;
@@ -47,7 +48,6 @@ module ElbertV2_FPGA_Board(
 	wire [9:0] counter_10bit_out;
 	wire dummy;
 	
-	reg rst_n_dht11;
 	wire [9:0]humid;
 	wire [9:0]temp;
 	wire [3:0]status;
@@ -59,8 +59,9 @@ module ElbertV2_FPGA_Board(
 	
 	wire start_dht11_capture;
 	reg auto_capture;
-	reg [2:0] auto_capture_counter;
+	reg [3:0] auto_capture_counter;
 	reg auto_capture_start;
+	reg auto_capture_rst_n;
 	wire [3:0] data0a;
 	wire [3:0] data1a;
 	wire [3:0] data2a;
@@ -74,12 +75,12 @@ module ElbertV2_FPGA_Board(
 	reg [3:0] LCD_1;
 	
 	wire dht11_start;
-	
+	wire rst_n_dht11;
 	assign rst_n = BTN[4];
 	
 	assign inc_n_btn = ~BTN[0];
 	assign btn2_n = ~BTN[1];
-
+	
 	
 	assign LED[7] = counter_4bit_out[0];
 	assign LED[6] = counter_4bit_out[1];
@@ -98,9 +99,9 @@ module ElbertV2_FPGA_Board(
 	assign IO_P1_5 = dht11_dat;
 	
 	assign start_dht11_capture = auto_capture? auto_capture_start:btn2_n_debounced;
+	assign rst_n_dht11 = btn6_debounced;//auto_capture? auto_capture_rst_n:btn6_debounced;
 	assign  humid[9:8] = 2'b0;
 	assign  temp[9:8] = 2'b0;
-	
 	
 	//assign SevenSegment = 	counter_10bit_out[7:0];
 	
@@ -110,7 +111,6 @@ module ElbertV2_FPGA_Board(
 		begin
 			state_func <=2'b0;
 			auto_capture<=1'b0;
-			auto_capture_counter<=3'b0;
 		end
 		else
 		begin
@@ -124,8 +124,7 @@ module ElbertV2_FPGA_Board(
 				LCD_2 <= TENS;
 				LCD_3 <= HUNDREDS;
 				auto_capture<=1'b0;
-				rst_n_dht11<=rst_n;
-			end
+		end
 			2'b1:
 			begin
 				
@@ -133,7 +132,6 @@ module ElbertV2_FPGA_Board(
 				LCD_2 <= data1a;
 				LCD_3 <= data2a;
 				auto_capture<=1'b0;
-				rst_n_dht11<=rst_n;
 			end
 			2'b10:
 			begin
@@ -153,24 +151,51 @@ module ElbertV2_FPGA_Board(
 		endcase
 		end
 	end
-	
+/*	
 	always@(posedge clk_div_1Hz or negedge rst_n)
 	begin
 		if(~rst_n)
-			auto_capture_counter<=3'b0;
+			auto_capture_counter<=4'b0;
 		else
-		
-			if(auto_capture_counter == 3'b111)
+		begin
+			auto_capture_counter<=auto_capture_counter+1;
+			if (auto_capture_counter == 4'b1101)
 			begin
-				auto_capture_start<=1'b1;
-				auto_capture_counter<=auto_capture_counter+1;
+				auto_capture_rst_n <=1'b0;
 			end
 			else
-			begin
-				auto_capture_start<=1'b0;
-				auto_capture_counter<=auto_capture_counter+1;
+			begin			
+				auto_capture_rst_n <=1'b1;
+				if(auto_capture_counter[2:0] == 3'b111)
+				begin
+					auto_capture_start<=1'b1;
+					
+				end
+				else
+				begin
+					auto_capture_start<=1'b0;
+				end
 			end
-			
+		end
+	end
+	*/
+	
+		
+	always@(posedge clk_div_1Hz or negedge rst_n)
+	begin
+		if(~rst_n)
+		begin
+			auto_capture_counter<=4'b0;
+			auto_capture_start<=1'b0;
+		end
+		else
+		begin
+			auto_capture_counter<=auto_capture_counter+1;
+			if(auto_capture_counter[2:0] == 3'b111)
+					auto_capture_start<=1'b1;
+			else
+				auto_capture_start<=1'b0;
+		end
 	end
 
 	
@@ -182,6 +207,7 @@ module ElbertV2_FPGA_Board(
 	
 	debounce debounce_inc(clk_div_1kHZ,inc_n_btn,inc_n_debounced);
 	debounce debounce_start(clk_div_1kHZ,btn2_n,btn2_n_debounced);
+	debounce debounce_dht11_rst(clk_div_1kHZ,BTN[5],btn6_debounced);
 	debounce debounce_rst(clk_div_1kHZ,rst_n,rst_debounced);
 
 	new_counter theNewCounter(rst_n,inc_n_debounced,counter_4bit_out);
